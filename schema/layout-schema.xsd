@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="http://slml.github.syren_dev_tech/layout/schema"
+    xmlns:slml="http://slml.github.syren_dev_tech/layout/schema"
+    elementFormDefault="qualified">
+
+    <!-- Positioning and sizing values: absolute pixels or percentages -->
+    <xs:simpleType name="dimensionType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\d+(\.\d+)?%?)" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Color values: hex format (#RRGGBB) -->
+    <xs:simpleType name="colorType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="#[0-9A-Fa-f]{6}" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Flex direction type: row or column -->
+    <xs:simpleType name="flexDirectionType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="row" />
+            <xs:enumeration value="column" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Flex alignment type: flex-start (default), center, even, or between -->
+    <xs:simpleType name="flexAlignType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="flex-start" />
+            <xs:enumeration value="center" />
+            <xs:enumeration value="even" />
+            <xs:enumeration value="between" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Flex grow value type: non-negative integer -->
+    <xs:simpleType name="flexGrowType">
+        <xs:restriction base="xs:nonNegativeInteger" />
+    </xs:simpleType>
+
+    <!-- Data format type for datasources -->
+    <xs:simpleType name="dataFormatType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="json-array" />
+            <xs:enumeration value="json-object" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Placeholder syntax: {{key}} or {{path/to/file}} -->
+    <xs:simpleType name="placeholderType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(\{\{[a-zA-Z0-9_/\.]+\}\}|[^{]*)" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Style format: semicolon-separated key:value pairs -->
+    <!-- 
+         Supported properties:
+         • Colors: backgroundColor, borderColor, color - format #RRGGBB
+         • Sizing: fontSize, padding, margin, borderWidth - format: number
+         • Text: textAlign (left|center|right), fontWeight (normal|bold), fontStyle (normal|italic)
+         • Example: backgroundColor:#8B7355;borderColor:#5C4C3C;fontSize:12;padding:4
+    -->
+    <xs:simpleType name="styleType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="([a-zA-Z]+:#[0-9A-Fa-f]{6}|[a-zA-Z]+:\d+|[a-zA-Z]+:[a-zA-Z0-9-]+)(;([a-zA-Z]+:#[0-9A-Fa-f]{6}|[a-zA-Z]+:\d+|[a-zA-Z]+:[a-zA-Z0-9-]+))*;?" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Element identifier -->
+    <xs:simpleType name="idType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[a-zA-Z_][a-zA-Z0-9_]*" />
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- Common positioning attributes -->
+    <xs:attributeGroup name="positioningAttributes">
+        <xs:annotation>
+            <xs:documentation> Position element on screen using absolute coordinates or percentages. x, y: Position from top-left corner width, height: Element dimensions All values can be pixels (e.g., "100") or percentages (e.g., "50%") </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="x" type="slml:dimensionType" />
+        <xs:attribute name="y" type="slml:dimensionType" />
+        <xs:attribute name="width" type="slml:dimensionType" />
+        <xs:attribute name="height" type="slml:dimensionType" />
+    </xs:attributeGroup>
+
+    <!-- Layout flex attributes -->
+    <xs:attributeGroup name="flexAttributes">
+        <xs:annotation>
+            <xs:documentation> Flex layout system for automatic child positioning and sizing. flex: Direction of child flow (row = horizontal, column = vertical) • row - Children flow left to right • column - Children flow top to bottom (default if omitted) • Optional - if omitted, children are positioned manually via x/y align: Justification/alignment along main axis (optional) • flex-start - Children positioned sequentially from start (default) • center - All children positioned starting at center • even - Children evenly spaced with gaps on all sides • between - Children evenly spaced, no gaps at edges • If omitted, defaults to flex-start flex-grow: Growth factor for filling remaining space (optional) • Value: Positive integer (1, 2, 3, etc.) • Effect: Element grows to fill remaining space in flex container • When multiple siblings have flex-grow, space distributed by ratio • Example: flex-grow="1" makes element expand vertically or horizontally • Only applies when parent element has flex layout When flex is set, child elements without explicit x/y coordinates are automatically positioned according to direction and alignment. Examples: • flex="row" - Horizontal flow, sequential (left to right) • flex="row" align="center" - Horizontal, all start at center • flex="column" - Vertical flow, sequential (top to bottom) • flex="column" align="between" - Vertical, first at top, last at bottom • flex="row" align="even" - Horizontal, evenly spaced with gaps • flex="column" flex-grow="1" - Vertical, element expands to fill space </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="flex" type="slml:flexDirectionType" use="optional" />
+        <xs:attribute name="align" type="slml:flexAlignType" use="optional" />
+        <xs:attribute name="flex-grow" type="slml:flexGrowType" use="optional" />
+    </xs:attributeGroup>
+
+    <!-- Common styling attributes -->
+    <xs:attributeGroup name="styleAttributes">
+        <xs:annotation>
+            <xs:documentation> Element styling using semicolon-separated properties. Format: key:value;key:value;... Common properties: backgroundColor: #RRGGBB (background color) borderColor: #RRGGBB (border color) color: #RRGGBB (text color) fontSize: number (font size in pixels) padding: number (internal spacing) margin: number (external spacing) borderWidth: number (border thickness) textAlign: left|center|right (text alignment) fontWeight: normal|bold (text weight) fontStyle: normal|italic (text style) Example: backgroundColor:#8B7355;borderColor:#5C4C3C;fontSize:12;padding:4 </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="style" type="slml:styleType" />
+    </xs:attributeGroup>
+
+    <!-- Identification attribute -->
+    <xs:attributeGroup name="identificationAttributes">
+        <xs:annotation>
+            <xs:documentation> Unique identifier for the element. Used to reference elements from Java code. Must be unique within the layout and follow naming rules: • Start with letter or underscore • Contain only alphanumeric and underscores • No spaces or special characters </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="id" type="slml:idType" use="required" />
+    </xs:attributeGroup>
+
+    <!-- DATASOURCE: Data loading element for data pack integration -->
+    <xs:element name="datasource">
+        <xs:annotation>
+            <xs:documentation> Declares a data source for use in repeated elements. Data is loaded from JSON files in the data pack. NO JAVA CODE MODIFICATION NEEDED - Data paths defined here! Attributes: id: Unique identifier for referencing this datasource (required) path: Path to data file relative to data/ directory (required) Examples: "slml/lists/trades.json", "slml/items/list.json" format: Data format (optional, default: json-array) • json-array - File contains [ {...}, {...} ] • json-object - File contains { "key": "value", ... } cache: Whether to cache loaded data in memory (optional, default: true) Set to false for frequently-changing data Usage: 1. Declare datasource at root level of layout: &lt;datasource id="trades" path="slml/lists/trades.json"/&gt; 2. Reference by id in repeated element: &lt;repeated datasource="trades"&gt; &lt;layout&gt;trade_item&lt;/layout&gt; &lt;/repeated&gt; 3. Properties from loaded data available as placeholders: &lt;text&gt;Item: {{item_name}}&lt;/text&gt; Example: &lt;datasource id="available_trades" path="slml/lists/trades.json" format="json-array" cache="true"/&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attribute name="id" type="slml:idType" use="required" />
+            <xs:attribute name="path" type="xs:string" use="required" />
+            <xs:attribute name="format" type="slml:dataFormatType" use="optional" default="json-array" />
+            <xs:attribute name="cache" type="xs:boolean" use="optional" default="true" />
+        </xs:complexType>
+    </xs:element>
+
+    <!-- PART: Generic container element -->
+    <xs:element name="part">
+        <xs:annotation>
+            <xs:documentation> A generic container element for grouping child elements. Can be used for layout structure without specific semantics. Attributes: id: Unique identifier (required for referencing from code) x, y, width, height: Position and size (pixels or %) flex: Layout direction (row or column) for auto-positioning align: Alignment along flex axis (flex-start|center|even|between) flex-grow: Growth factor for filling remaining space style: Styling properties (semicolon-separated) Example: &lt;part id="my_container" flex="column" align="flex-start" style="backgroundColor:#8B7355"&gt; &lt;text&gt;Child elements here&lt;/text&gt; &lt;/part&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="slml:datasource" minOccurs="0" />
+                <xs:element ref="slml:part" />
+                <xs:element ref="slml:text" />
+                <xs:element ref="slml:button" />
+                <xs:element ref="slml:item" />
+                <xs:element ref="slml:repeated" />
+                <xs:element ref="slml:layout" />
+            </xs:choice>
+            <xs:attributeGroup ref="slml:identificationAttributes" />
+            <xs:attributeGroup ref="slml:positioningAttributes" />
+            <xs:attributeGroup ref="slml:flexAttributes" />
+            <xs:attributeGroup ref="slml:styleAttributes" />
+        </xs:complexType>
+    </xs:element>
+
+    <!-- TEXT: Text display element -->
+    <xs:element name="text">
+        <xs:annotation>
+            <xs:documentation> Displays text content in the UI. Content can be static text or placeholders. Attributes: id: Unique identifier (required for referencing from code) x, y, width, height: Position and size (pixels or %) flex: Layout direction if containing other elements style: Text styling (color, fontSize, textAlign, etc.) Placeholder Support: Use {{placeholder_name}} to insert dynamic values. Types of placeholders: • Runtime values (from Java): {{villager_name}}, {{profession}} • Data values (from datasource): {{item_name}}, {{trade_output}} (only available inside &lt;repeated datasource="..."/&gt;) Example: &lt;text&gt;Welcome {{player_name}}&lt;/text&gt; Example: &lt;text id="header_text" style="color:#FFFFFF;fontSize:14"&gt; Welcome {{player_name}} &lt;/text&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="slml:part" />
+                <xs:element ref="slml:text" />
+                <xs:element ref="slml:button" />
+                <xs:element ref="slml:item" />
+            </xs:choice>
+            <xs:attribute name="id" type="slml:idType" />
+            <xs:attributeGroup ref="slml:positioningAttributes" />
+            <xs:attributeGroup ref="slml:flexAttributes" />
+            <xs:attributeGroup ref="slml:styleAttributes" />
+        </xs:complexType>
+    </xs:element>
+
+    <!-- BUTTON: Interactive button element -->
+    <xs:element name="button">
+        <xs:annotation>
+            <xs:documentation> An interactive button element for user input. Button can have text content and styling. Attributes: id: Unique identifier (required for referencing from code) x, y, width, height: Position and size (pixels or %) style: Button styling (backgroundColor, borderColor, color, etc.) vanilla: When set to "true", renders as Minecraft vanilla button instead of a custom styled button (optional, default: false) Text Content: Can include static text or {{placeholder}} values. Supports multiple lines. Event Handling: Button clicks are handled by Java code using element id. Example in Java: getElementById("close_button") Example (Custom button): &lt;button id="close_button" style="backgroundColor:#8B5A5A;color:#FFFFFF"&gt; Close &lt;/button&gt; Example (Vanilla Minecraft button): &lt;button id="close_button" vanilla="true"&gt; Close &lt;/button&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+                <xs:element ref="slml:text" />
+            </xs:choice>
+            <xs:attribute name="id" type="slml:idType" use="required" />
+            <xs:attributeGroup ref="slml:positioningAttributes" />
+            <xs:attributeGroup ref="slml:styleAttributes" />
+            <xs:attribute name="vanilla" type="xs:boolean" use="optional" default="false" />
+        </xs:complexType>
+    </xs:element>
+
+    <!-- ITEM: Item reference element for displaying Minecraft items -->
+    <xs:element name="item">
+        <xs:annotation>
+            <xs:documentation> References a Minecraft item to be displayed. Content: Item identifier or placeholder (text content only, no child elements) Format: minecraft:itemname (e.g., minecraft:dirt, minecraft:enchanted_book) Placeholders: {{placeholder_name}} (e.g., {{trade_output}}) Attributes: id: Unique identifier (required for referencing from code) x, y, width, height: Position and size (pixels or %) style: Item styling Use Cases: • Trade items in trade lists • Inventory items • Item rewards/costs display Examples: &lt;item id="trade_item_1"&gt;minecraft:enchanted_book&lt;/item&gt; &lt;item id="output_item"&gt;{{trade_output}}&lt;/item&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:simpleContent>
+                <xs:extension base="slml:placeholderType">
+                    <xs:attribute name="id" type="slml:idType" />
+                    <xs:attributeGroup ref="slml:positioningAttributes" />
+                    <xs:attributeGroup ref="slml:styleAttributes" />
+                </xs:extension>
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- REPEATED: Dynamic list rendering element -->
+    <xs:element name="repeated">
+        <xs:annotation>
+            <xs:documentation> Generates multiple instances of child elements from data. Data Source Specification (choose one): datasource: Recommended - References a &lt;datasource&gt; element by id Example: &lt;repeated datasource="trades_data"&gt; Benefit: Data paths declared in XML, not Java code dict: Legacy - Data source as {{placeholder}} or file path Example: &lt;repeated dict="{{available_trades}}"&gt; Status: Deprecated - use datasource instead Child Elements: Must contain exactly one &lt;layout&gt; element that defines the structure to repeat for each data item. Data Iteration: For each item in the data array, the item's properties become available as placeholders {{property_name}} in child elements. Example data (JSON array): [ {"name": "sword", "rarity": "rare"}, {"name": "shield", "rarity": "uncommon"} ] In child template: {{name}} → "sword" (first iteration) {{name}} → "shield" (second iteration) Examples: NEW WAY (recommended): &lt;datasource id="trades" path="slml/lists/trades.json"/&gt; &lt;repeated datasource="trades"&gt; &lt;layout&gt;trade_item&lt;/layout&gt; &lt;/repeated&gt; OLD WAY (still supported but deprecated): &lt;repeated dict="{{available_trades}}"&gt; &lt;layout&gt;trade_item&lt;/layout&gt; &lt;/repeated&gt; </xs:documentation>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="slml:layout" minOccurs="1" maxOccurs="1" />
+            </xs:sequence>
+            <xs:attribute name="datasource" type="slml:idType" use="optional" />
+            <xs:attribute name="dict" type="slml:placeholderType" use="optional" />
+        </xs:complexType>
+    </xs:element>
+
+    <!-- LAYOUT: Modular component inclusion -->
+    <xs:element name="layout">
+        <xs:annotation>
+            <xs:documentation> Includes a reusable layout component from an external XML file. Content: The text content specifies the component name (without path or extension). The component is loaded from data/slml/ui/{name}.xml Component Resolution: • Component name is case-sensitive • File must exist in data/slml/ui/ directory • Component inherits parent's placeholders • Component inherits parent's datasources Usage Patterns: 1. Standalone component inclusion: &lt;layout&gt;my_component&lt;/layout&gt; 2. Within &lt;repeated&gt; for dynamic lists: &lt;repeated datasource="items"&gt; &lt;layout&gt;item_template&lt;/layout&gt; &lt;/repeated&gt; Placeholder Inheritance: • Parent placeholders are passed to component • Component can use all parent placeholders • Repeated context placeholders available in repeated items • Datasources from parent available in component Example: &lt;layout&gt;header_component&lt;/layout&gt; This loads and renders: data/slml/ui/header_component.xml </xs:documentation>
+        </xs:annotation>
+        <xs:complexType mixed="true">
+            <xs:simpleContent>
+                <xs:extension base="xs:string" />
+            </xs:simpleContent>
+        </xs:complexType>
+    </xs:element>
+
+    <!-- ================================================================ -->
+    <!-- ROOT ELEMENT DEFINITION                                         -->
+    <!-- ================================================================ -->
+
+    <!-- Root element must be <part> -->
+    <xs:element name="layout-root" substitutionGroup="slml:part">
+        <xs:annotation>
+            <xs:documentation> Layout Root Element Every layout XML file must have a &lt;part&gt; as root element that acts as the main container for the entire UI. Structure: 1. Optional &lt;datasource&gt; declarations (one or more) These define where data comes from - NO JAVA CODE CHANGES! 2. UI element hierarchy Required Attributes: id: Unique layout identifier (e.g., "villager_trade_screen") x, y, width, height: Must typically be 0%, 0%, 100%, 100% for full-screen layouts Optional Attributes: flex: "row" or "column" (optional, default if omitted is no flex) align: "flex-start"|"center"|"even"|"between" (optional, default: flex-start) flex-grow: Growth factor (non-negative integer) style: Overall styling for the container Datasource Usage: Declare data sources at the root level, then reference them in &lt;repeated&gt; elements throughout the layout. This keeps all data declarations in XML, not scattered in Java! Example: &lt;?xml version="1.0" encoding="UTF-8"?&gt; &lt;part id="main_screen" width="100%" height="100%" flex="column" style="backgroundColor:#8B7355" xmlns="http://slml.github.syren_dev_tech/layout/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://slml.github.syren_dev_tech/layout/schema layout-schema.xsd"&gt; &lt;!-- Declare data sources - NO JAVA CODE CHANGES NEEDED --&gt; &lt;datasource id="trades" path="slml/lists/trades.json"/&gt; &lt;!-- Use data in UI --&gt; &lt;part id="header" flex="row"&gt; &lt;text&gt;Trades&lt;/text&gt; &lt;/part&gt; &lt;repeated datasource="trades"&gt; &lt;layout&gt;trade_item&lt;/layout&gt; &lt;/repeated&gt; &lt;/part&gt; </xs:documentation>
+        </xs:annotation>
+    </xs:element>
+
+    <xs:annotation>
+        <xs:documentation> === XML LAYOUT SCHEMA - STRUCTURAL CONSTRAINTS (v2.0) === NEW IN V2.0: DATASOURCE ELEMENT FOR DATA PACK INTEGRATION ============================================================ • Define data paths in XML using &lt;datasource&gt; elements • No need to modify Java code to add new data sources • Data is loaded directly from data pack JSON files • Clear separation between UI definition and data declaration 1. HIERARCHY RULES • Root element must be &lt;part&gt; • Root &lt;part&gt; can contain: datasource, part, text, button, item, repeated, layout (datasources should come before UI elements) • Child &lt;part&gt; can contain: part, text, button, item, repeated, layout • &lt;datasource&gt; elements declare data sources (no children) • &lt;text&gt; can contain nested text elements • &lt;button&gt; can contain text elements • &lt;item&gt; has no child elements (content is item name/placeholder) • &lt;repeated&gt; must contain exactly one &lt;layout&gt; element • &lt;layout&gt; is terminal (no children, only content) 2. ATTRIBUTE RULES • id: Must be unique within layout, alphanumeric + underscore • x, y, width, height: Can be pixels (100) or percentages (50%) • flex: "row" or "column" for direction • align: "flex-start", "center", "even", or "between" (default: flex-start) • flex-grow: Non-negative integer for space distribution • style: Semicolon-separated key:value pairs • datasource (repeated): Must reference a datasource id • dict (repeated): Legacy - placeholder or file path (deprecated) • path (datasource): File path relative to data/ directory • format (datasource): "json-array" or "json-object" (default: json-array) • cache (datasource): true or false (default: true) 3. FLEX LAYOUT SYSTEM Direction (main axis): • row - Children flow left to right (horizontally) • column - Children flow top to bottom (vertically) Alignment/Justification (along main axis): • flex-start (default) Children positioned sequentially from start Example: flex="row" align="flex-start" Result: Items at left, space at right • center All children positioned starting at center Example: flex="row" align="center" For single child: centered in container For multiple: all start at center, stack forward • even Children evenly spaced with gaps on all sides Example: flex="column" align="even" Formula: gap = availableSpace / (numChildren + 1) Result: Equal gaps before first, between all, after last • between Children evenly spaced, no gaps at edges Example: flex="row" align="between" For 1 child: centered in container For 2+ children: first at start, last at end, others between Formula: gap = availableSpace / (numChildren - 1) Growth Factor (flex-grow): • Specifies how much an element grows to fill remaining space • Non-negative integer (0, 1, 2, etc.) • Distributes remaining space proportionally among siblings • Example: Two children with flex-grow="1" each get equal space • Example: Child with flex-grow="2" gets double space of child with flex-grow="1" Child Sizing: • Children without explicit width/height are sized to fit content • Children with explicit dimensions use those values • Parent calculates available space for child positioning • Padding and margin respected in calculations Padding: • Specified in style attribute: padding:4 • Flex layout respects container padding • Available space = container size - padding*2 • Children positioned within padded inner area 4. DATASOURCE AND DATA LOADING Declaration: &lt;datasource id="trades" path="slml/lists/trades.json"/&gt; Path Resolution: • Relative to data/ directory in data pack • Example: "slml/lists/trades.json" loads data/slml/lists/trades.json • Must point to valid JSON file Format: • json-array (default): File contains [ {...}, {...}, ... ] • json-object: File contains { "key": "value", ... } Caching: • cache="true" (default): Data loaded once, reused • cache="false": Data reloaded every time Usage: • Reference by id in &lt;repeated datasource="trades"&gt; • Each item's properties become placeholders • Available within repeated element and its children 5. PLACEHOLDER RULES Format: {{placeholder_name}} or {{property_name}} Types: • Runtime placeholders (from Java code): {{villager_name}}, {{profession}}, {{status_message}} Set via XMLAwareLayoutLoader.setPlaceholders() Available throughout layout • Data placeholders (from datasource): {{item_name}}, {{trade_output}}, etc. Properties of current item in &lt;repeated&gt; element Only available within &lt;repeated datasource="..."/&gt; scope Resolution Order: 1. Check if item property (if in repeated context) 2. Check runtime placeholders (from Java) 3. If not found, leave as {{placeholder}} (or show MISSING_PLACEHOLDER) Case Sensitivity: Placeholder names are case-sensitive Escaping: Not currently supported - use different placeholder names 6. STYLING PROPERTIES Format: property:value;property:value;... No spaces around colons or semicolons Color Properties (format: #RRGGBB): • backgroundColor: Background color • borderColor: Border color • color: Text color Sizing Properties (format: integer): • fontSize: Font size in pixels • padding: Internal spacing • margin: External spacing • borderWidth: Border thickness Text Properties: • textAlign: left, center, right, or justified • fontWeight: normal or bold • fontStyle: normal or italic Examples: style="backgroundColor:#8B7355" style="color:#FFFFFF;fontSize:14;fontWeight:bold" style="backgroundColor:#8B7355;borderColor:#5C4C3C;padding:4" 7. COMPONENT FILES Files in data/slml/ui/: • *.xml files are component templates • Referenced via &lt;layout&gt;component_name&lt;/layout&gt; • Component name is case-sensitive • Components can include other components • Components inherit parent context (placeholders, datasources) Component Structure: Root element is &lt;part&gt; with unique id Can declare its own datasources Can use parent's placeholders and datasources 8. NESTING DEPTH • No hard limits, but avoid excessive nesting (>10 levels) • Flex layouts flatten hierarchy for performance • Deeply nested layouts harder to maintain 9. ID UNIQUENESS • All element ids must be unique within a layout • Referenced from Java code: getElementById("element_id") • Datasource ids must be unique and referenced by &lt;repeated&gt; • Use descriptive names: "header_text", "trade_button", etc. 10. VALIDATION • Schema validates XML structure • IDE provides real-time feedback • File must exist at declared path • Placeholder references should match setup in Java </xs:documentation>
+    </xs:annotation>
+
+</xs:schema>

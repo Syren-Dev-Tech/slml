@@ -1,0 +1,173 @@
+version: '3'
+
+vars:
+  MOD_VERSION:
+    sh: grep -E '^[[:space:]]*mod_version[[:space:]]*=' gradle.properties | head -n1 | cut -d= -f2- | tr -d '[:space:]'
+
+tasks:
+  stop-daemon:
+    desc: Stop all running Gradle daemons
+    cmds:
+      - gradle --stop
+
+  clean:
+    desc: Run Gradle clean in the project
+    cmds:
+      - gradle clean
+
+  clear-build-cache:
+    desc: Delete Gradle local build-cache
+    cmds:
+      - rm -rf ~/.gradle/caches/build-cache-*
+
+  clear-transforms:
+    desc: Delete Gradle transform caches
+    cmds:
+      - rm -rf ~/.gradle/caches/transforms-*
+
+  clear-all-caches:
+    desc: Nuclear option - delete entire Gradle caches directory
+    deps:
+      - stop-daemon
+    cmds:
+      - rm -rf ~/.gradle/caches
+    status:
+      - test ! -d ~/.gradle/caches
+
+  refresh-deps:
+    desc: 'Force refresh Gradle dependencies without running full build'
+    cmds:
+      - gradle dependencies --refresh-dependencies
+
+  bump-version:
+    desc: Bump the mod_version in gradle.properties (patch, minor, or major)
+    vars:
+      TYPE: 'patch'
+    cmds:
+      - |
+        set -euo pipefail; \
+        version=$(grep -E '^[[:space:]]*mod_version[[:space:]]*=' gradle.properties | head -n1 | cut -d= -f2- | tr -d '[:space:]'); \
+        if [[ -z "$version" ]]; then \
+            echo "Error: mod_version not found in gradle.properties" >&2; \
+            exit 1; \
+        fi; \
+        IFS='.' read -r major minor patch <<< "$version"; \
+        case "{{.TYPE}}" in \
+            major) major=$((major + 1)); minor=0; patch=0 ;; \
+            minor) minor=$((minor + 1)); patch=0 ;; \
+            patch) patch=$((patch + 1)) ;; \
+            *) echo "Error: invalid type '{{.TYPE}}'. Use major, minor, or patch." >&2; exit 1 ;; \
+        esac; \
+        new_version="$major.$minor.$patch"; \
+        sed -i "s/^mod_version=.*/mod_version=$new_version/" gradle.properties; \
+        echo "Bumped mod_version from $version to $new_version"
+
+  release:
+    vars:
+      TAG: v{{.MOD_VERSION}}
+    cmds:
+      - |
+        if [ -z "{{.MOD_VERSION}}" ]; then \
+            echo "Error: mod_version not found in gradle.properties" >&2; \
+            exit 1; \
+        fi; \
+        if git rev-parse "{{.TAG}}" >/dev/null 2>&1; then \
+            echo "Error: tag '{{.TAG}}' already exists" >&2; \
+            exit 1; \
+        fi; \
+        git tag "{{.TAG}}"; \
+        echo "Created git tag: {{.TAG}}"
+
+  publish-tag:
+    vars:
+      TAG: v{{.MOD_VERSION}}
+      REMOTE: '{{.TAG_REMOTE | default "origin"}}'
+    cmds:
+      - |
+        if [ -z "{{.MOD_VERSION}}" ]; then \
+            echo "Error: mod_version not found in gradle.properties" >&2; \
+            exit 1; \
+        fi; \
+        git fetch --tags "{{.REMOTE}}"; \
+        if git ls-remote --tags "{{.REMOTE}}" "refs/tags/{{.TAG}}" | grep -q 'refs/tags/{{.TAG}}$'; then \
+            echo "Error: tag '{{.TAG}}' already exists on remote '{{.REMOTE}}'" >&2; \
+            exit 1; \
+        fi; \
+        if ! git rev-parse "{{.TAG}}" >/dev/null 2>&1; then \
+            echo "Error: local tag '{{.TAG}}' does not exist. Run 'release' first." >&2; \
+            exit 1; \
+        fi; \
+        git push "{{.REMOTE}}" "{{.TAG}}"; \
+        echo "Pushed git tag: {{.TAG}} to {{.REMOTE}}"
+
+  publish-remote:
+    vars:
+      LOADER: neoforge
+    cmds:
+      - gradle --no-daemon clean build -P{{.LOADER}}=true
+      - mkdir -p ./dist/{{.LOADER}}
+      - cp build/libs/*.jar ./dist/{{.LOADER}}/
+      - gradle --no-daemon publish -P{{.LOADER}}=true
+      - gradle --no-daemon publishToMavenLocal
+
+  publish-local:
+    vars:
+      LOADER: neoforge
+    cmds:
+      - |
+        gradle --no-daemon clean build -P{{.LOADER}}=true
+        mkdir -p ./dist/{{.LOADER}}
+        cp build/libs/*.jar ./dist/{{.LOADER}}/
+        gradle --no-daemon publishToMavenLocal
+
+  update-dep:
+    desc: Finds the latest local Maven version of a package and updates gradle.properties
+    vars:
+      GRADLE_PROPS_FILE: 'gradle.properties'
+      GROUP_ID: 'com/github/syren_dev_tech'
+    cmds:
+      - |
+        # Convert group ID dots to slashes for the directory path
+        GROUP_PATH="{{.GROUP_ID}}"
+        GROUP_PATH=${GROUP_PATH//./\/}
+        REPO_PATH="$HOME/.m2/repository/$GROUP_PATH/{{.ARTIFACT_ID}}"
+        
+        # Check if the directory exists
+        if [ ! -d "$REPO_PATH" ]; then
+          echo "Error: Local Maven path $REPO_PATH does not exist."
+          exit 1
+        fi
+        
+        # Find the latest version using sort -V (version sort)
+        LATEST_VERSION=$(ls "$REPO_PATH" | grep -E '^[0-9]' | sort -V | tail -n 1)
+        
+        if [ -z "$LATEST_VERSION" ]; then
+          echo "Error: No valid versions found in $REPO_PATH"
+          exit 1
+        fi
+        
+        echo "Latest local version found: $LATEST_VERSION"
+        
+        # Check if gradle.properties exists
+        if [ ! -f "{{.GRADLE_PROPS_FILE}}" ]; then
+          echo "Error: {{.GRADLE_PROPS_FILE}} not found."
+          exit 1
+        fi
+        
+        # Update or append the property in gradle.properties
+        if grep -q "^{{.PROPERTY_NAME}}=" "{{.GRADLE_PROPS_FILE}}"; then
+          # If key exists, replace it (handles macOS and Linux compatibility via sed)
+          sed -i.bak 's/^{{.PROPERTY_NAME}}=.*/{{.PROPERTY_NAME}}='"$LATEST_VERSION"'/' "{{.GRADLE_PROPS_FILE}}" && rm -f "{{.GRADLE_PROPS_FILE}}.bak"
+          echo "Updated {{.PROPERTY_NAME}} to $LATEST_VERSION in {{.GRADLE_PROPS_FILE}}"
+        else
+          # If key does not exist, append it
+          echo "{{.PROPERTY_NAME}}=$LATEST_VERSION" >> "{{.GRADLE_PROPS_FILE}}"
+          echo "Added {{.PROPERTY_NAME}}=$LATEST_VERSION to {{.GRADLE_PROPS_FILE}}"
+        fi
+    silent: true
+
+  resync:
+    cmds:
+      - gradle build
+      - task: bump-version
+      - task publish-local
