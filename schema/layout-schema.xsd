@@ -108,13 +108,13 @@
         </xs:annotation>
         <xs:complexType>
             <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element ref="datasource" minOccurs="0" />
-                <xs:element ref="part" />
-                <xs:element ref="text" />
-                <xs:element ref="button" />
-                <xs:element ref="item" />
-                <xs:element ref="repeated" />
-                <xs:element ref="layout" />
+                <xs:element ref="slml:datasource" minOccurs="0" />
+                <xs:element ref="slml:part" />
+                <xs:element ref="slml:text" />
+                <xs:element ref="slml:button" />
+                <xs:element ref="slml:item" />
+                <xs:element ref="slml:repeated" />
+                <xs:element ref="slml:layout" />
             </xs:choice>
             <!-- Identification Attributes -->
             <xs:attribute name="id" type="slml:idType" use="required" />
@@ -139,10 +139,10 @@
         </xs:annotation>
         <xs:complexType mixed="true">
             <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element ref="part" />
-                <xs:element ref="text" />
-                <xs:element ref="button" />
-                <xs:element ref="item" />
+                <xs:element ref="slml:part" />
+                <xs:element ref="slml:text" />
+                <xs:element ref="slml:button" />
+                <xs:element ref="slml:item" />
             </xs:choice>
             <!-- Identification Attributes -->
             <xs:attribute name="id" type="slml:idType" use="optional" />
@@ -167,7 +167,7 @@
         </xs:annotation>
         <xs:complexType mixed="true">
             <xs:choice minOccurs="0" maxOccurs="unbounded">
-                <xs:element ref="text" />
+                <xs:element ref="slml:text" />
             </xs:choice>
             <!-- Identification Attributes -->
             <xs:attribute name="id" type="slml:idType" use="required" />
@@ -212,7 +212,7 @@
         </xs:annotation>
         <xs:complexType>
             <xs:sequence>
-                <xs:element ref="layout" minOccurs="1" maxOccurs="1" />
+                <xs:element ref="slml:layout" minOccurs="1" maxOccurs="1" />
             </xs:sequence>
             <xs:attribute name="datasource" type="slml:idType" use="optional" />
             <xs:attribute name="dict" type="slml:placeholderType" use="optional" />
