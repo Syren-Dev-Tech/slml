@@ -39,6 +39,7 @@ public class UIElementFactory {
                 case "button" -> ButtonElement.fromJson(json, font);
                 case "texture" -> TextureElement.fromJson(json);
                 case "item" -> ItemElement.fromJson(json, font);
+                case "item-name" -> ItemNameElement.fromJson(json, font);
                 case "container" -> ContainerElement.fromJson(json, font);
                 case "input_text" -> TextInputElement.fromJson(json, font);
                 case "input_numeric" -> NumericInputElement.fromJson(json, font);

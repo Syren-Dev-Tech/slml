@@ -658,6 +658,7 @@ public class XMLLayoutParser {
             case "text" -> "text";
             case "button" -> "button";
             case "item" -> "item";
+            case "item-name" -> "item-name";
             default -> "container";
         };
     }
