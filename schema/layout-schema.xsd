@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    targetNamespace="http://slml.github.syren_dev_tech/layout/schema"
-    xmlns:slml="http://slml.github.syren_dev_tech/layout/schema"
+    targetNamespace="https://syren-dev-tech.com/slml"
+    xmlns="https://syren-dev-tech.com/slml"
     elementFormDefault="qualified">
 
     <!-- Positioning and sizing values: absolute pixels or percentages -->
