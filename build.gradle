@@ -50,6 +50,11 @@ def allBuilds(artifact_id) {
                 from components.java    
             }
         }
+        repositories {
+            maven {
+                url = layout.projectDirectory.dir('dist/maven-repo')
+            }
+        }
     }
 }
 
