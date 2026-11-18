@@ -1,0 +1,60 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "com.github.syren_dev_tech",
+    "module": "slml_neoforge",
+    "version": "1.0.0",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.9.1"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "files": [
+        {
+          "name": "slml_neoforge-1.0.0.jar",
+          "url": "slml_neoforge-1.0.0.jar",
+          "size": 98676,
+          "sha512": "5dbca8d12af71344d254bf3a9065f9230274fcc98633c98c65b2de374319aa3edcda68c9ec5357e3132a437f40947868f7521c03018f242536659b889a0b5c08",
+          "sha256": "9d76dc2937c9bac37190c46cc98863aba90a52c9a5b451434be9a87ed7b620a0",
+          "sha1": "c5a6c20b904b96cf38c54faefd5011f45fb8226d",
+          "md5": "2443ef4946d8562ed034883bec0dfb49"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 21,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "slml_neoforge-1.0.0.jar",
+          "url": "slml_neoforge-1.0.0.jar",
+          "size": 98676,
+          "sha512": "5dbca8d12af71344d254bf3a9065f9230274fcc98633c98c65b2de374319aa3edcda68c9ec5357e3132a437f40947868f7521c03018f242536659b889a0b5c08",
+          "sha256": "9d76dc2937c9bac37190c46cc98863aba90a52c9a5b451434be9a87ed7b620a0",
+          "sha1": "c5a6c20b904b96cf38c54faefd5011f45fb8226d",
+          "md5": "2443ef4946d8562ed034883bec0dfb49"
+        }
+      ]
+    }
+  ]
+}
